@@ -20,6 +20,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 use Tenancy\Environment;
 use Tenancy\Identification\Contracts\ResolvesTenants;
+use Illuminate\Bus\Dispatcher;
+use Tenancy\Identification\Drivers\Queue\Middleware\DispatcherMiddleware;
 
 class IdentificationProvider extends ServiceProvider
 {
@@ -65,5 +67,10 @@ class IdentificationProvider extends ServiceProvider
 
             return $queue;
         });
+    }
+
+    public function boot()
+    {
+        $this->app->make(Dispatcher::class)->pipeThrough([DispatcherMiddleware::class]);
     }
 }

@@ -1,0 +1,39 @@
+<?php declare(strict_types=1);
+
+/*
+ * This file is part of the tenancy/tenancy package.
+ *
+ * (c) Daniël Klabbers <daniel@klabbers.email>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ *
+ * @see http://laravel-tenancy.com
+ * @see https://github.com/tenancy
+ */
+
+namespace Tenancy\Identification\Drivers\Queue\Middleware;
+
+use Tenancy\Environment;
+use Tenancy\Identification\Contracts\ResolvesTenants;
+
+class DispatcherMiddleware
+{
+    public function handle($command, $next)
+    {
+        $key = $command->tenant_key ?? null;
+        $identifier = $command->tenant_identifier ?? null;
+
+        if ($key && $identifier) {
+            /** @var Environment $environment */
+            $environment = resolve(Environment::class);
+            /** @var ResolvesTenants $resolver */
+            $resolver = resolve(ResolvesTenants::class);
+
+            $tenant = $resolver->findModel($identifier, $key);
+
+            $environment->setTenant($tenant);
+        }
+        return $next($command);
+    }
+}
