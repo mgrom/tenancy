@@ -20,6 +20,8 @@ use Tenancy\Identification\Contracts\ResolvesTenants;
 use Tenancy\Identification\Contracts\Tenant;
 use Tenancy\Identification\Drivers\Queue\Providers\IdentificationProvider;
 use Tenancy\Testing\TestCase;
+use Illuminate\Support\Facades\Bus;
+use Tenancy\Environment;
 
 class IdentifyInQueueTest extends TestCase
 {
@@ -70,5 +72,37 @@ class IdentifyInQueueTest extends TestCase
             $second->getTenantKey(),
             $second->getTenantIdentifier()
         ));
+    }
+
+    /**
+     * @test
+     */
+    public function dispatch_now()
+    {
+        $tenant = $this->createMockTenant();
+
+        dispatch_now(new Mocks\Job);
+
+        $this->assertNull(
+            resolve(Environment::class)->getTenant()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function dispatch_now_override()
+    {
+        $tenant = $this->createMockTenant();
+
+        dispatch_now(new Mocks\Job(
+            $tenant->getTenantKey(),
+            $tenant->getTenantIdentifier()
+        ));
+
+        $environment = resolve(Environment::class);
+
+        $this->assertEquals($tenant->getTenantKey(), $environment->getTenant()->getTenantKey());
+        $this->assertEquals($tenant->getTenantIdentifier(), $environment->getTenant()->getTenantIdentifier());
     }
 }
